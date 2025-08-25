@@ -1,0 +1,10 @@
+# API keys - set these in your environment
+# export OPENAI_API_KEY=your_openai_key_here
+# export GEMINI_API_KEY=your_gemini_key_here  
+# export ANTHROPIC_API_KEY=your_anthropic_key_here
+source ~/.cargo/env
+export ANDROID_HOME=$HOME/Library/Android/sdk
+export ANDROID_NDK_HOME=$ANDROID_HOME/ndk/29.0.13846066
+export NDK_HOME=$ANDROID_NDK_HOME
+export PATH=$PATH:$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools
+export PATH=/opt/homebrew/opt/openjdk@17/bin:$PATH

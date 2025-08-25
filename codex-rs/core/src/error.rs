@@ -15,12 +15,12 @@ pub enum SandboxErr {
     Denied(i32, String, String),
 
     /// Error from linux seccomp filter setup
-    #[cfg(target_os = "linux")]
+    #[cfg(any(target_os = "linux", target_os = "android"))]
     #[error("seccomp setup error")]
     SeccompInstall(#[from] seccompiler::Error),
 
     /// Error from linux seccomp backend
-    #[cfg(target_os = "linux")]
+    #[cfg(any(target_os = "linux", target_os = "android"))]
     #[error("seccomp backend error")]
     SeccompBackend(#[from] seccompiler::BackendError),
 
@@ -110,11 +110,11 @@ pub enum CodexErr {
     #[error(transparent)]
     Json(#[from] serde_json::Error),
 
-    #[cfg(target_os = "linux")]
+    #[cfg(any(target_os = "linux", target_os = "android"))]
     #[error(transparent)]
     LandlockRuleset(#[from] landlock::RulesetError),
 
-    #[cfg(target_os = "linux")]
+    #[cfg(any(target_os = "linux", target_os = "android"))]
     #[error(transparent)]
     LandlockPathFd(#[from] landlock::PathFdError),
 

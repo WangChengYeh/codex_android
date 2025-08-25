@@ -54,13 +54,27 @@ cd codex-rs
 cargo build --release --target aarch64-linux-android
 ```
 
-## Built Binaries
+## Build Status
 
-After a successful build, you'll find the following binaries in `codex-rs/target/aarch64-linux-android/release/`:
+### ✅ Successfully Built Libraries
 
-- `codex` - Main CLI binary
-- `codex-exec` - Execution binary
-- `codex-linux-sandbox` - Sandbox binary (now supports Android)
+The following libraries build successfully for Android (`aarch64-linux-android`):
+
+- `libcodex_apply_patch.rlib` - Code patch application functionality
+- `libcodex_common.rlib` - Common utilities and shared code
+- `libcodex_linux_sandbox.rlib` - Sandbox functionality (works on Android) 
+- `libcodex_ollama.rlib` - Ollama integration
+
+### ❌ Known Limitations
+
+**Libraries that fail to build:**
+- `codex-login` - Fails due to OpenSSL header detection issues
+- `codex-core` - Contains portable-pty dependency using `openpty()` not available on Android
+- `codex-cli` - Depends on core library and TUI functionality
+- `codex-exec` - Depends on core library for process execution
+
+**Root Cause:**
+The `portable-pty` crate uses `openpty()` system call which is not available on Android. Android uses different TTY/PTY management compared to desktop Linux, and full TUI functionality requires Android-specific terminal handling.
 
 ## Android-Specific Changes
 

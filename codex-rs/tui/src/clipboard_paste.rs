@@ -1,6 +1,9 @@
 use std::path::PathBuf;
 use tempfile::Builder;
 
+#[cfg(not(target_os = "android"))]
+use arboard;
+
 #[derive(Debug)]
 pub enum PasteImageError {
     ClipboardUnavailable(String),
@@ -42,6 +45,7 @@ pub struct PastedImageInfo {
 }
 
 /// Capture image from system clipboard, encode to PNG, and return bytes + info.
+#[cfg(not(target_os = "android"))]
 pub fn paste_image_as_png() -> Result<(Vec<u8>, PastedImageInfo), PasteImageError> {
     tracing::debug!("attempting clipboard image read");
     let mut cb = arboard::Clipboard::new()
@@ -76,6 +80,14 @@ pub fn paste_image_as_png() -> Result<(Vec<u8>, PastedImageInfo), PasteImageErro
             height: h,
             encoded_format: EncodedImageFormat::Png,
         },
+    ))
+}
+
+/// Android stub - clipboard not supported
+#[cfg(target_os = "android")]
+pub fn paste_image_as_png() -> Result<(Vec<u8>, PastedImageInfo), PasteImageError> {
+    Err(PasteImageError::ClipboardUnavailable(
+        "Clipboard functionality not available on Android".to_string(),
     ))
 }
 
