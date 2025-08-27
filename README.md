@@ -10,8 +10,9 @@
 <p align="center"><strong>Android Codex</strong> brings OpenAI's powerful coding agent directly to Android devices with native ARM64 binaries, custom Android PTY implementation, and comprehensive debugging support.</p>
 
 <p align="center">
-  <img src="./.github/codex-cli-splash.png" alt="Codex CLI splash" width="50%" />
+  <img src="./android_screenshot.png" alt="Android Codex running natively on Android device" width="60%" />
   </p>
+<p align="center"><em>Android Codex running natively on an Android device via Termux</em></p>
 
 ---
 
