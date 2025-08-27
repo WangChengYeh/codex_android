@@ -51,6 +51,10 @@ pub mod shell;
 pub mod spawn;
 pub mod terminal;
 mod tool_apply_patch;
+
+// Android-specific PTY implementation
+#[cfg(target_os = "android")]
+mod android_pty;
 pub mod turn_diff_tracker;
 pub mod user_agent;
 mod user_notification;

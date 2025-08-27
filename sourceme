@@ -4,7 +4,8 @@
 # export ANTHROPIC_API_KEY=your_anthropic_key_here
 source ~/.cargo/env
 export ANDROID_HOME=$HOME/Library/Android/sdk
-export ANDROID_NDK_HOME=$ANDROID_HOME/ndk/29.0.13846066
+export ANDROID_NDK_HOME=$ANDROID_HOME/ndk/27.2.12479018
 export NDK_HOME=$ANDROID_NDK_HOME
+export PATH=$PATH:$NDK_HOME
 export PATH=$PATH:$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools
 export PATH=/opt/homebrew/opt/openjdk@17/bin:$PATH

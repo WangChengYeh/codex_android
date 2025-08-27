@@ -1,0 +1,1 @@
+/Users/wangchengye/Documents/GitHub/codex_android/test_android_minimal/target/aarch64-linux-android/release/test_android_minimal: /Users/wangchengye/Documents/GitHub/codex_android/test_android_minimal/src/main.rs

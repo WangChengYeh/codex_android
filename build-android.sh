@@ -15,6 +15,9 @@ if [ -z "$ANDROID_NDK_HOME" ]; then
     exit 1
 fi
 
+# Use the NDK version that's actually available
+export ANDROID_NDK_HOME="/Users/wangchengye/Library/Android/sdk/ndk/27.2.12479018"
+
 if [ ! -d "$ANDROID_NDK_HOME" ]; then
     echo "Error: Android NDK not found at $ANDROID_NDK_HOME"
     exit 1
@@ -68,8 +71,7 @@ export OPENSSL_STATIC=1
 echo "Building workspace..."
 cd codex-rs
 
-echo "Note: Android build has limitations due to TTY/PTY requirements"
-echo "Building libraries that can work on Android..."
+echo "Building libraries with custom Android PTY implementation..."
 
 # Build libraries that should work on Android
 echo "Building codex-apply-patch library..."
@@ -88,9 +90,14 @@ echo "Building codex-linux-sandbox library..."
 cargo build --release --target aarch64-linux-android --lib -p codex-linux-sandbox || echo "codex-linux-sandbox build failed"
 
 echo ""
-echo "Note: Core library and binaries skipped due to portable-pty dependency"
-echo "portable-pty uses openpty() which is not available on Android"
-echo "Future work needed to implement Android-compatible TTY handling"
+echo "Building codex-core with custom Android PTY implementation..."
+cargo build --release --target aarch64-linux-android --lib -p codex-core || echo "codex-core build failed"
+
+echo "Building codex-cli binary with custom Android PTY implementation..."
+cargo build --release --target aarch64-linux-android --bin codex -p codex-cli || echo "codex-cli binary build failed"
+
+echo "Building codex-exec binary with custom Android PTY implementation..."
+cargo build --release --target aarch64-linux-android --bin codex-exec -p codex-exec || echo "codex-exec binary build failed"
 
 echo "Android build completed successfully!"
 echo "Binaries are available in target/aarch64-linux-android/release/"

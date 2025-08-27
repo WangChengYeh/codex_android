@@ -19,7 +19,6 @@ use codex_login::AuthMode;
 use codex_protocol::config_types::ReasoningEffort;
 use codex_protocol::config_types::ReasoningSummary;
 use codex_protocol::config_types::SandboxMode;
-use dirs::home_dir;
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::path::Path;
@@ -328,6 +327,17 @@ pub fn set_project_trusted(codex_home: &Path, project_path: &Path) -> anyhow::Re
     std::fs::create_dir_all(codex_home)?;
 
     // create a tmp_file
+    #[cfg(target_os = "android")]
+    let tmp_file = {
+        // On Android, create temp file in a more reliable location
+        let temp_path = codex_home.join(format!("config_tmp_{}", std::process::id()));
+        let file = std::fs::File::create(&temp_path)?;
+        use tempfile::TempPath;
+        let temp_path_obj = TempPath::from_path(temp_path);
+        NamedTempFile::from_parts(file, temp_path_obj)
+    };
+    
+    #[cfg(not(target_os = "android"))]
     let tmp_file = NamedTempFile::new_in(codex_home)?;
     std::fs::write(tmp_file.path(), doc.to_string())?;
 
@@ -869,14 +879,48 @@ pub fn find_codex_home() -> std::io::Result<PathBuf> {
         return PathBuf::from(val).canonicalize();
     }
 
-    let mut p = home_dir().ok_or_else(|| {
-        std::io::Error::new(
-            std::io::ErrorKind::NotFound,
-            "Could not find home directory",
-        )
-    })?;
-    p.push(".codex");
-    Ok(p)
+    // On Android, use writable directories instead of home directory
+    #[cfg(target_os = "android")]
+    {
+        // Try common writable locations on Android
+        let writable_dirs = [
+            "/data/data/com.termux/files/home/.codex",  // Termux
+            "/sdcard/codex",                           // External storage
+            "/data/local/tmp/codex",                   // Local tmp (if accessible)
+            "/storage/emulated/0/codex",               // Primary storage
+        ];
+        
+        for dir in &writable_dirs {
+            let path = PathBuf::from(dir);
+            if let Ok(parent) = path.parent().ok_or_else(|| std::io::Error::new(
+                std::io::ErrorKind::NotFound,
+                "No parent directory",
+            )) {
+                // Try to create a test file to check if directory is writable
+                if let Ok(_) = std::fs::create_dir_all(parent) {
+                    if let Ok(_) = std::fs::File::create(parent.join(".codex_test")) {
+                        let _ = std::fs::remove_file(parent.join(".codex_test"));
+                        return Ok(path);
+                    }
+                }
+            }
+        }
+        
+        // Fallback to /tmp if all else fails
+        return Ok(PathBuf::from("/tmp/.codex"));
+    }
+
+    #[cfg(not(target_os = "android"))]
+    {
+        let mut p = home_dir().ok_or_else(|| {
+            std::io::Error::new(
+                std::io::ErrorKind::NotFound,
+                "Could not find home directory",
+            )
+        })?;
+        p.push(".codex");
+        Ok(p)
+    }
 }
 
 /// Returns the path to the folder where Codex logs are stored. Does not verify
