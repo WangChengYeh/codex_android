@@ -107,6 +107,9 @@ cd /data/local/tmp
 # Set API key (required for OpenAI API access)
 export OPENAI_API_KEY=your_key_here
 
+# CRITICAL: Set HOME to writable directory (fixes rollout recorder error)
+export HOME=/data/local/tmp
+
 # Run basic commands
 ./codex --help
 ./codex --version
@@ -117,6 +120,10 @@ export OPENAI_API_KEY=your_key_here
 
 ### Example Commands
 ```bash
+# Always set these first (in every session):
+export OPENAI_API_KEY=your_key_here
+export HOME=/data/local/tmp
+
 # System analysis
 ./codex exec --skip-git-repo-check "Analyze this Android system and show hardware info"
 
@@ -126,7 +133,7 @@ export OPENAI_API_KEY=your_key_here
 # File operations
 ./codex exec --skip-git-repo-check "List all files in current directory and explain their purposes"
 
-# With different sandbox modes
+# With different sandbox modes (HOME workaround enables file writing)
 ./codex exec --skip-git-repo-check --sandbox workspace-write "Create a test file"
 ```
 
@@ -198,6 +205,9 @@ adb shell "df -h /data/local/tmp"
 
 ### Solutions
 ```bash
+# CRITICAL: Always set HOME to fix rollout recorder error
+export HOME=/data/local/tmp
+
 # Use workspace-write for file operations
 ./codex exec --skip-git-repo-check --sandbox workspace-write "command"
 
