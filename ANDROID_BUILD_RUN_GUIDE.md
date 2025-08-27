@@ -6,27 +6,49 @@ This guide covers building, deploying, and debugging the Android Codex binary on
 
 ### Development Environment
 - **macOS/Linux** development machine
-- **Android NDK 27.2.x** or compatible
-- **Rust toolchain** with Android target support
+- **Rust 1.70+** with cross-compilation support
+- **Android NDK 27.2.x** (tested) or compatible version
 - **Android device** with USB debugging enabled
 - **ADB** (Android Debug Bridge)
 - **LLDB** for debugging (optional)
+- **Git** for cloning repository
 
-### Required Tools
+### Install Dependencies
 ```bash
-# Install Rust and Android target
+# Install Rust (if not already installed)
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+source ~/.cargo/env
+
+# Add Android target
 rustup target add aarch64-linux-android
 
-# Android SDK/NDK setup
+# Install Android SDK/NDK (via Android Studio or standalone)
+# Or using Homebrew on macOS:
+brew install --cask android-studio
+```
+
+### Android NDK Setup
+```bash
+# Set NDK environment (adjust path as needed)
 export ANDROID_HOME=$HOME/Library/Android/sdk
 export ANDROID_NDK_HOME=$ANDROID_HOME/ndk/27.2.12479018
+export PATH=$PATH:$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/darwin-x86_64/bin
 export PATH=$PATH:$ANDROID_HOME/platform-tools
+
+# Verify NDK installation
+echo $ANDROID_NDK_HOME
+ls $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/*/bin/aarch64-linux-android*-clang
 ```
 
 ## 🔧 Environment Setup
 
 ### 1. Source Environment Variables
 ```bash
+# Clone repository (if not already done)
+git clone https://github.com/WangChengYeh/codex_android.git
+cd codex_android
+
+# Source environment variables
 source sourceme
 ```
 
@@ -38,35 +60,173 @@ export OPENAI_API_KEY=your_openai_api_key_here
 
 ## 🚀 Building Android Codex
 
-### Quick Build
+### Quick Build (Recommended)
 ```bash
-# Build all Android components
+# One-command build - builds all Android components
 ./build-android.sh
 ```
+
+**Build Output:**
+- **Location**: `codex-rs/target/aarch64-linux-android/release/codex`
+- **Size**: ~23MB optimized binary
+- **Architecture**: ARM64 (aarch64) for modern Android devices
 
 ### Manual Build Steps
 ```bash
 cd codex-rs
 
-# Install Android target
+# Install Android target (if not already added)
 rustup target add aarch64-linux-android
 
-# Build individual components
-cargo build --release --target aarch64-linux-android --lib -p codex-core
-cargo build --release --target aarch64-linux-android --bin codex -p codex-cli
-cargo build --release --target aarch64-linux-android --bin codex-exec -p codex-exec
+# Step-by-step build process:
 
-# Built binaries location:
-# target/aarch64-linux-android/release/codex
-# target/aarch64-linux-android/release/codex-exec
+# 1. Build core library
+cargo build --release --target aarch64-linux-android --lib -p codex-core
+
+# 2. Build CLI binary  
+cargo build --release --target aarch64-linux-android --bin codex -p codex-cli
+
+# 3. Build exec binary (optional)
+cargo build --release --target aarch64-linux-android --bin codex-exec -p codex-exec
 ```
 
-### Build Configuration
-The build uses custom configuration for Android:
-- **Rustls TLS** instead of OpenSSL (Android compatibility)
-- **Custom PTY implementation** for Android terminals
-- **Android-specific home directory** detection
-- **Landlock sandboxing** for Linux/Android security
+**Built binaries location:**
+```
+codex-rs/target/aarch64-linux-android/release/
+├── codex           # Main CLI binary (~23MB)
+├── codex-exec      # Exec-only binary
+└── deps/           # Dependencies and intermediate files
+```
+
+### Android-Specific Build Configuration
+The build uses custom configuration for Android compatibility:
+- **Rustls TLS**: No OpenSSL dependency (Android compatible)
+- **Custom PTY**: Android-compatible terminal handling in `core/src/android_pty.rs`
+- **Modified reqwest**: Uses rustls instead of native-tls
+- **Conditional portable-pty**: Excluded on Android target
+- **Android home directory**: Custom detection in `config.rs`
+
+**Key files modified for Android:**
+- `codex-rs/core/Cargo.toml` - Android dependencies and rustls config
+- `codex-rs/login/Cargo.toml` - rustls configuration for login module
+- `codex-rs/core/src/android_pty.rs` - Android PTY implementation
+- `codex-rs/core/src/config.rs` - Android-compatible home directory handling
+
+## 🔍 Build Verification
+
+### Check Build Success
+```bash
+# Verify binary was created and check size
+ls -lh codex-rs/target/aarch64-linux-android/release/codex
+# Should show ~23MB ARM64 binary
+
+# Check file type (on macOS/Linux)
+file codex-rs/target/aarch64-linux-android/release/codex
+# Expected: ELF 64-bit LSB shared object, ARM aarch64
+
+# Check binary size
+du -h codex-rs/target/aarch64-linux-android/release/codex
+```
+
+## 🔧 Build Troubleshooting
+
+### Common Build Issues
+
+#### NDK Not Found Error
+```bash
+# Error: linker `aarch64-linux-android21-clang` not found
+# Solution: Check NDK path and toolchain installation
+echo $ANDROID_NDK_HOME
+ls $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/*/bin/aarch64-linux-android*-clang
+
+# Fix: Update NDK path in sourceme or environment
+export ANDROID_NDK_HOME=/path/to/your/ndk
+```
+
+#### OpenSSL Build Errors
+```bash
+# Error: failed to run custom build command for `openssl-sys`
+# Solution: Project uses rustls, but some dependencies might pull OpenSSL
+
+# Check for OpenSSL dependencies
+cargo tree --target aarch64-linux-android | grep openssl
+
+# The project is configured to avoid OpenSSL on Android
+# If you see OpenSSL errors, check Cargo.toml configurations are correct
+```
+
+#### Linking Issues with NDK
+```bash
+# Error: unknown options: --as-needed -Bstatic
+# Solution: Create proper cargo config for Android linking
+
+mkdir -p .cargo
+cat > .cargo/config.toml << EOF
+[target.aarch64-linux-android]
+linker = "aarch64-linux-android21-clang"
+rustflags = [
+    "-C", "link-arg=-fuse-ld=lld",
+]
+EOF
+```
+
+#### Clean Build
+```bash
+# Clean all build artifacts and rebuild
+cargo clean
+
+# Clean specific target
+cargo clean --target aarch64-linux-android
+
+# Rebuild from scratch
+./build-android.sh
+```
+
+## 🎯 Build Variants
+
+### Different Android Architectures
+```bash
+# ARM64 (recommended - modern Android devices)
+cargo build --release --target aarch64-linux-android
+
+# ARM32 (older devices)
+rustup target add armv7-linux-androideabi
+cargo build --release --target armv7-linux-androideabi
+
+# x86_64 (Android emulators, x86 devices)
+rustup target add x86_64-linux-android  
+cargo build --release --target x86_64-linux-android
+
+# x86 (older x86 Android devices)
+rustup target add i686-linux-android
+cargo build --release --target i686-linux-android
+```
+
+### Build Variants Overview
+| Target | Architecture | Use Case |
+|--------|--------------|----------|
+| `aarch64-linux-android` | ARM64 | Modern Android devices (recommended) |
+| `armv7-linux-androideabi` | ARM32 | Older Android devices |
+| `x86_64-linux-android` | x86_64 | Android emulators, x86 devices |
+| `i686-linux-android` | x86 | Old x86 Android devices |
+
+## ✅ Build Success Checklist
+
+Before proceeding to deployment, verify your build is successful:
+
+- [ ] **Rust and Android NDK installed** - Check versions and paths
+- [ ] **Android target added** - `rustup target list --installed` shows `aarch64-linux-android`
+- [ ] **Environment sourced** - `source sourceme` executed successfully
+- [ ] **Build completed** - `./build-android.sh` runs without errors
+- [ ] **Binary created** - File exists at `codex-rs/target/aarch64-linux-android/release/codex`
+- [ ] **Size verification** - Binary is approximately 23MB in size
+- [ ] **File type check** - `file` command shows ARM64 ELF binary
+- [ ] **No critical errors** - No unresolved linking or compilation errors
+
+**Performance expectations:**
+- **Compilation time**: 3-8 minutes (depending on hardware)
+- **Binary size**: ~23MB (optimized release build)
+- **Dependencies**: All bundled (static linking for portability)
 
 ## 📱 Deployment to Android Device
 

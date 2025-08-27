@@ -1,12 +1,58 @@
-<h1 align="center">OpenAI Codex CLI</h1>
+<h1 align="center">Android Codex CLI</h1>
 
-<p align="center"><code>npm i -g @openai/codex</code><br />or <code>brew install codex</code></p>
+<p align="center"><strong>🤖 AI-powered coding assistant running natively on Android devices</strong></p>
 
-<p align="center"><strong>Codex CLI</strong> is a coding agent from OpenAI that runs locally on your computer.</br>If you are looking for the <em>cloud-based agent</em> from OpenAI, <strong>Codex Web</strong>, see <a href="https://chatgpt.com/codex">chatgpt.com/codex</a>.</p>
+<p align="center">
+  <code>./android_setup.sh</code> → Deploy to Android device<br/>
+  <code>export HOME=/data/local/tmp && ./codex exec "Your prompt"</code> → Run on Android
+</p>
+
+<p align="center"><strong>Android Codex</strong> brings OpenAI's powerful coding agent directly to Android devices with native ARM64 binaries, custom Android PTY implementation, and comprehensive debugging support.</p>
 
 <p align="center">
   <img src="./.github/codex-cli-splash.png" alt="Codex CLI splash" width="50%" />
   </p>
+
+---
+
+## 🚀 Quick Start
+
+### For Pre-built Binary (Recommended)
+```bash
+# 1. Clone repository
+git clone https://github.com/WangChengYeh/codex_android.git
+cd codex_android
+
+# 2. Deploy to connected Android device
+./android_setup.sh
+
+# 3. Use on Android device
+adb shell
+. /data/local/tmp/setup_env.sh          # Source environment
+export OPENAI_API_KEY=your_key_here     # Set your API key
+./codex exec --skip-git-repo-check "Your AI prompt here"
+```
+
+### For Building from Source
+```bash
+# 1. Install prerequisites
+rustup target add aarch64-linux-android
+
+# 2. Clone and build
+git clone https://github.com/WangChengYeh/codex_android.git
+cd codex_android
+source sourceme
+./build-android.sh
+
+# 3. Deploy and run (same as above)
+./android_setup.sh
+```
+
+**📋 Documentation:**
+- **[ANDROID_BUILD_RUN_GUIDE.md](ANDROID_BUILD_RUN_GUIDE.md)** - Complete build, deployment, and usage guide
+- **[android_setup.sh](android_setup.sh)** - Automated deployment script
+
+**🔧 Critical:** Always set `export HOME=/data/local/tmp` on Android to prevent filesystem errors!
 
 ---
 
