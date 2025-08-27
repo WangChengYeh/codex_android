@@ -1,0 +1,12 @@
+#!/data/data/com.termux/files/usr/bin/bash
+set -e
+echo "Setting up Android Codex..."
+mkdir -p ~/.config/codex
+if [ ! -f ~/.config/codex/config.toml ]; then
+    cp /data/data/com.termux/files/usr/etc/codex/config.toml.example ~/.config/codex/config.toml
+fi
+if ! grep -q "export CODEX_HOME" ~/.bashrc 2>/dev/null; then
+    echo 'export CODEX_HOME=$HOME' >> ~/.bashrc
+fi
+echo "Android Codex installed! Run 'codex-setup' to configure."
+exit 0

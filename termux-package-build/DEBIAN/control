@@ -1,0 +1,13 @@
+Package: codex-android
+Version: 0.0.1
+Section: utils
+Priority: optional
+Architecture: aarch64
+Depends: openssl-tool
+Installed-Size: 23552
+Maintainer: Android Codex Team <noreply@github.com>
+Description: AI-powered coding assistant for Android
+ Android Codex brings OpenAI's powerful coding agent directly to Android
+ devices with native ARM64 binaries, custom Android PTY implementation,
+ and comprehensive debugging support.
+Homepage: https://github.com/WangChengYeh/codex_android
