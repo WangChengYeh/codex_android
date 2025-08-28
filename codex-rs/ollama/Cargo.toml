@@ -15,7 +15,7 @@ async-stream = "0.3"
 bytes = "1.10.1"
 codex-core = { path = "../core" }
 futures = "0.3"
-reqwest = { version = "0.12", features = ["json", "stream"] }
+reqwest = { version = "0.12", features = ["json", "stream"], default-features = false }
 serde_json = "1"
 tokio = { version = "1", features = [
     "io-std",
@@ -27,6 +27,10 @@ tokio = { version = "1", features = [
 toml = "0.9.5"
 tracing = { version = "0.1.41", features = ["log"] }
 wiremock = "0.6"
+
+# Android target configuration - use rustls instead of OpenSSL
+[target.aarch64-linux-android.dependencies]
+reqwest = { version = "0.12", features = ["json", "stream", "rustls-tls"], default-features = false }
 
 [dev-dependencies]
 tempfile = "3"

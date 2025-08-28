@@ -29,10 +29,9 @@ libc = "0.2.175"
 mcp-types = { path = "../mcp-types" }
 mime_guess = "2.0"
 os_info = "3.12.0"
-portable-pty = "0.9.0"
 rand = "0.9"
 regex-lite = "0.1.6"
-reqwest = { version = "0.12", features = ["json", "stream"] }
+reqwest = { version = "0.12", features = ["json", "stream"], default-features = false }
 serde = { version = "1", features = ["derive"] }
 serde_bytes = "0.11"
 serde_json = "1"
@@ -60,8 +59,11 @@ uuid = { version = "1", features = ["serde", "v4"] }
 whoami = "1.6.1"
 wildmatch = "2.4.0"
 
+# portable-pty is not available on Android, so exclude it
+[target.'cfg(not(target_os = "android"))'.dependencies]
+portable-pty = "0.9.0"
 
-[target.'cfg(target_os = "linux")'.dependencies]
+[target.'cfg(any(target_os = "linux", target_os = "android"))'.dependencies]
 landlock = "0.4.1"
 seccompiler = "0.5.0"
 
@@ -72,6 +74,10 @@ openssl-sys = { version = "*", features = ["vendored"] }
 # Build OpenSSL from source for musl builds.
 [target.aarch64-unknown-linux-musl.dependencies]
 openssl-sys = { version = "*", features = ["vendored"] }
+
+# Android target configuration - use rustls instead of OpenSSL
+[target.aarch64-linux-android.dependencies]
+reqwest = { version = "0.12", features = ["json", "stream", "rustls-tls"], default-features = false }
 
 [target.'cfg(target_os = "windows")'.dependencies]
 which = "6"

@@ -1,12 +1,60 @@
-<h1 align="center">OpenAI Codex CLI</h1>
+<h1 align="center">Android Codex CLI</h1>
 
-<p align="center"><code>npm i -g @openai/codex</code><br />or <code>brew install codex</code></p>
-
-<p align="center"><strong>Codex CLI</strong> is a coding agent from OpenAI that runs locally on your computer.</br>If you are looking for the <em>cloud-based agent</em> from OpenAI, <strong>Codex Web</strong>, see <a href="https://chatgpt.com/codex">chatgpt.com/codex</a>.</p>
+<p align="center"><strong>🤖 AI-powered coding assistant running natively on Android devices</strong></p>
 
 <p align="center">
-  <img src="./.github/codex-cli-splash.png" alt="Codex CLI splash" width="50%" />
+  <code>./android_setup.sh</code> → Deploy to Android device<br/>
+  <code>export HOME=/data/local/tmp && ./codex exec "Your prompt"</code> → Run on Android
+</p>
+
+<p align="center"><strong>Android Codex</strong> brings OpenAI's powerful coding agent directly to Android devices with native ARM64 binaries, custom Android PTY implementation, and comprehensive debugging support.</p>
+
+<p align="center">
+  <img src="./android_screenshot.png" alt="Android Codex running natively on Android device" width="60%" />
   </p>
+<p align="center"><em>Android Codex running natively on an Android device via Termux</em></p>
+
+---
+
+## 🚀 Quick Start
+
+### For Pre-built Binary (Recommended)
+```bash
+# 1. Clone repository
+git clone https://github.com/WangChengYeh/codex_android.git
+cd codex_android
+
+# 2. Deploy to connected Android device
+./android_setup.sh
+
+# 3. Use on Android device
+adb shell
+. /data/local/tmp/setup_env.sh          # Source environment
+export OPENAI_API_KEY=your_key_here     # Set your API key
+./codex exec --skip-git-repo-check "Your AI prompt here"
+```
+
+### For Building from Source
+```bash
+# 1. Install prerequisites
+rustup target add aarch64-linux-android
+
+# 2. Clone and build
+git clone https://github.com/WangChengYeh/codex_android.git
+cd codex_android
+source sourceme
+./build-android.sh
+
+# 3. Deploy and run (same as above)
+./android_setup.sh
+```
+
+**📦 Installation Options:**
+- **Pre-built binary deployment** (recommended) - see [Quick Start](#-quick-start) above
+- **Termux package installation** - see [Termux Package Installation](#-termux-package-installation) below
+- **Build from source** - see [Building from Source](#-building-from-source) below
+
+**🔧 Critical:** Always set `export HOME=/data/local/tmp` on Android to prevent filesystem errors!
 
 ---
 
@@ -15,52 +63,321 @@
 
 <!-- Begin ToC -->
 
+- [🚀 Quick Start](#-quick-start)
+- [📦 Termux Package Installation](#-termux-package-installation)
+- [🏗️ Building from Source](#️-building-from-source)
+  - [Prerequisites](#prerequisites)
+  - [Environment Setup](#environment-setup)
+  - [Build Process](#build-process)
+  - [Build Troubleshooting](#build-troubleshooting)
+- [📱 Deployment to Android Device](#-deployment-to-android-device)
+- [🎯 Running Android Codex](#-running-android-codex)
+- [🐛 Debugging](#-debugging)
+- [⚡ Performance & Limitations](#-performance--limitations)
+- [🔧 Troubleshooting](#-troubleshooting)
 - [Quickstart](#quickstart)
   - [Installing and running Codex CLI](#installing-and-running-codex-cli)
   - [Using Codex with your ChatGPT plan](#using-codex-with-your-chatgpt-plan)
-  - [Connecting on a "Headless" Machine](#connecting-on-a-headless-machine)
-    - [Authenticate locally and copy your credentials to the "headless" machine](#authenticate-locally-and-copy-your-credentials-to-the-headless-machine)
-    - [Connecting through VPS or remote](#connecting-through-vps-or-remote)
-  - [Usage-based billing alternative: Use an OpenAI API key](#usage-based-billing-alternative-use-an-openai-api-key)
-    - [Forcing a specific auth method (advanced)](#forcing-a-specific-auth-method-advanced)
   - [Choosing Codex's level of autonomy](#choosing-codexs-level-of-autonomy)
-    - [**1. Read/write**](#1-readwrite)
-    - [**2. Read-only**](#2-read-only)
-    - [**3. Advanced configuration**](#3-advanced-configuration)
-    - [Can I run without ANY approvals?](#can-i-run-without-any-approvals)
-    - [Fine-tuning in `config.toml`](#fine-tuning-in-configtoml)
   - [Example prompts](#example-prompts)
-- [Running with a prompt as input](#running-with-a-prompt-as-input)
 - [Using Open Source Models](#using-open-source-models)
-  - [Platform sandboxing details](#platform-sandboxing-details)
-- [Experimental technology disclaimer](#experimental-technology-disclaimer)
 - [System requirements](#system-requirements)
 - [CLI reference](#cli-reference)
 - [Memory & project docs](#memory--project-docs)
-- [Non-interactive / CI mode](#non-interactive--ci-mode)
 - [Model Context Protocol (MCP)](#model-context-protocol-mcp)
-- [Tracing / verbose logging](#tracing--verbose-logging)
-  - [DotSlash](#dotslash)
 - [Configuration](#configuration)
 - [FAQ](#faq)
-- [Zero data retention (ZDR) usage](#zero-data-retention-zdr-usage)
-- [Codex open source fund](#codex-open-source-fund)
 - [Contributing](#contributing)
-  - [Development workflow](#development-workflow)
-  - [Writing high-impact code changes](#writing-high-impact-code-changes)
-  - [Opening a pull request](#opening-a-pull-request)
-  - [Review process](#review-process)
-  - [Community values](#community-values)
-  - [Getting help](#getting-help)
-  - [Contributor license agreement (CLA)](#contributor-license-agreement-cla)
-    - [Quick fixes](#quick-fixes)
-  - [Releasing `codex`](#releasing-codex)
 - [Security & responsible AI](#security--responsible-ai)
 - [License](#license)
 
 <!-- End ToC -->
 
 </details>
+
+---
+
+## 📦 Termux Package Installation
+
+The easiest way to install Android Codex on your Android device is via the Termux package:
+
+### Quick Installation
+```bash
+# 1. Download the .deb package to your Android device
+# 2. Open Termux and run:
+pkg install ~/codex-android_0.0.1_aarch64.deb
+
+# 3. Run initial setup
+codex-setup
+
+# 4. Start using Android Codex
+codex exec "Your AI prompt here"
+```
+
+### Manual Installation
+```bash
+# If you have the package on your device already:
+cp /sdcard/codex-android_0.0.1_aarch64.deb ~/
+pkg install ~/codex-android_0.0.1_aarch64.deb
+codex-setup
+```
+
+**Package Features:**
+- ✅ **9.5MB package** with 23MB ARM64 binary
+- ✅ **Automatic setup** with post-installation script
+- ✅ **Configuration templates** for Android optimization
+- ✅ **Complete documentation** and examples included
+- ✅ **Easy updates** via standard package management
+
+---
+
+## 🏗️ Building from Source
+
+### Prerequisites
+
+#### Development Environment
+- **macOS/Linux** development machine
+- **Rust 1.70+** with cross-compilation support
+- **Android NDK 27.2.x** (tested) or compatible version
+- **Android device** with USB debugging enabled
+- **ADB** (Android Debug Bridge)
+- **LLDB** for debugging (optional)
+
+#### Install Dependencies
+```bash
+# Install Rust (if not already installed)
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+source ~/.cargo/env
+
+# Add Android target
+rustup target add aarch64-linux-android
+
+# Install Android SDK/NDK (via Android Studio or standalone)
+# Or using Homebrew on macOS:
+brew install --cask android-studio
+```
+
+#### Android NDK Setup
+```bash
+# Set NDK environment (adjust path as needed)
+export ANDROID_HOME=$HOME/Library/Android/sdk
+export ANDROID_NDK_HOME=$ANDROID_HOME/ndk/27.2.12479018
+export PATH=$PATH:$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/darwin-x86_64/bin
+export PATH=$PATH:$ANDROID_HOME/platform-tools
+
+# Verify NDK installation
+echo $ANDROID_NDK_HOME
+ls $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/*/bin/aarch64-linux-android*-clang
+```
+
+### Environment Setup
+
+```bash
+# Clone repository
+git clone https://github.com/WangChengYeh/codex_android.git
+cd codex_android
+
+# Source environment variables
+source sourceme
+
+# Set API Keys
+export OPENAI_API_KEY=your_openai_api_key_here
+```
+
+### Build Process
+
+#### Quick Build (Recommended)
+```bash
+# One-command build - builds all Android components
+./build-android.sh
+```
+
+**Build Output:**
+- **Location**: `codex-rs/target/aarch64-linux-android/release/codex`
+- **Size**: ~23MB optimized binary
+- **Architecture**: ARM64 (aarch64) for modern Android devices
+
+#### Manual Build Steps
+```bash
+cd codex-rs
+
+# Step-by-step build process:
+# 1. Build core library
+cargo build --release --target aarch64-linux-android --lib -p codex-core
+
+# 2. Build CLI binary  
+cargo build --release --target aarch64-linux-android --bin codex -p codex-cli
+
+# 3. Build exec binary (optional)
+cargo build --release --target aarch64-linux-android --bin codex-exec -p codex-exec
+```
+
+### Build Troubleshooting
+
+#### NDK Not Found Error
+```bash
+# Error: linker `aarch64-linux-android21-clang` not found
+# Solution: Check NDK path and toolchain installation
+echo $ANDROID_NDK_HOME
+ls $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/*/bin/aarch64-linux-android*-clang
+```
+
+#### Clean Build
+```bash
+# Clean all build artifacts and rebuild
+cargo clean
+./build-android.sh
+```
+
+---
+
+## 📱 Deployment to Android Device
+
+### Connect and Deploy
+```bash
+# 1. Connect Android device with USB debugging enabled
+adb devices  # Verify device connection
+
+# 2. Deploy binary
+adb push codex-rs/target/aarch64-linux-android/release/codex /data/local/tmp/codex
+adb shell chmod +x /data/local/tmp/codex
+
+# 3. Test deployment
+adb shell "/data/local/tmp/codex --version"
+```
+
+### Automated Deployment
+```bash
+# Use the automated deployment script
+./android_setup.sh
+```
+
+---
+
+## 🎯 Running Android Codex
+
+### Basic Usage
+```bash
+# Start ADB shell
+adb shell
+
+# Navigate to binary location
+cd /data/local/tmp
+
+# CRITICAL: Set HOME to writable directory
+export HOME=/data/local/tmp
+
+# Set API key
+export OPENAI_API_KEY=your_key_here
+
+# Run Android Codex
+./codex exec --skip-git-repo-check "Your prompt here"
+```
+
+### Example Commands
+```bash
+# System analysis
+./codex exec --skip-git-repo-check "Analyze this Android system and show hardware info"
+
+# Code generation
+./codex exec --skip-git-repo-check "Create a shell script to monitor system resources"
+
+# With different sandbox modes
+./codex exec --skip-git-repo-check --sandbox workspace-write "Create a test file"
+```
+
+### Working in Termux
+```bash
+# In Termux (after package installation)
+export OPENAI_API_KEY=your_key_here
+codex exec "Your AI prompt here"
+```
+
+---
+
+## 🐛 Debugging
+
+### Using MCP Pexpect (Automated)
+```bash
+# Run comprehensive debugging session
+python3 android_deploy_debug.py
+
+# Simple deployment test  
+python3 android_deploy_simple.py
+```
+
+### Manual LLDB Debugging
+```bash
+# On Android device (requires root or lldb-server)
+adb shell "/data/local/tmp/lldb-server platform --listen '*:5039' --server"
+
+# On host machine
+adb forward tcp:5039 tcp:5039
+lldb
+(lldb) platform select remote-android
+(lldb) platform connect connect://localhost:5039
+```
+
+---
+
+## ⚡ Performance & Limitations
+
+### Performance Characteristics
+- **Binary Size**: ~23MB (optimized release build)
+- **Memory Usage**: ~50-100MB runtime
+- **Response Time**: 15-45 seconds for complex queries
+- **Model**: GPT-5 with reasoning effort: medium
+
+### Known Limitations
+- **Android Shell**: Uses `sh` instead of `bash`
+- **File System**: Requires `export HOME=/data/local/tmp` workaround
+- **Sandbox**: Some commands restricted by Android security
+
+### Solutions
+```bash
+# Essential environment setup
+export HOME=/data/local/tmp  # Critical for Android compatibility
+export OPENAI_API_KEY=your_key_here
+
+# Use appropriate sandbox modes
+codex exec --sandbox workspace-write "command requiring file access"
+codex exec --skip-git-repo-check "command for non-git directories"
+```
+
+---
+
+## 🔧 Troubleshooting
+
+### Build Issues
+```bash
+# Clean build
+cargo clean
+./build-android.sh
+
+# Check NDK path
+echo $ANDROID_NDK_HOME
+```
+
+### Runtime Issues
+```bash
+# Check device connection
+adb devices
+
+# Verify binary permissions
+adb shell "ls -la /data/local/tmp/codex"
+
+# Test basic execution
+adb shell "cd /data/local/tmp && ./codex --version"
+```
+
+### Authentication Issues
+```bash
+# Verify API key is set
+adb shell "echo \$OPENAI_API_KEY"
+
+# Test with explicit key
+adb shell "export OPENAI_API_KEY='your_key' && /data/local/tmp/codex --version"
+```
 
 ---
 
@@ -106,7 +423,7 @@ Run `codex` and select **Sign in with ChatGPT**. You'll need a Plus, Pro, or Tea
 
 > Important: If you've used the Codex CLI before, follow these steps to migrate from usage-based billing with your API key:
 >
-> 1. Update the CLI and ensure `codex --version` is `0.20.0` or later
+> 1. Update the CLI and ensure `codex --version` is `0.25.0` or later
 > 2. Delete `~/.codex/auth.json` (this should be `C:\Users\USERNAME\.codex\auth.json` on Windows)
 > 3. Run `codex login` again
 
@@ -414,23 +731,37 @@ Help us improve by filing issues or submitting PRs (see the section below for ho
 
 ## System requirements
 
-| Requirement                 | Details                                                         |
-| --------------------------- | --------------------------------------------------------------- |
-| Operating systems           | macOS 12+, Ubuntu 20.04+/Debian 10+, or Windows 11 **via WSL2** |
-| Git (optional, recommended) | 2.23+ for built-in PR helpers                                   |
-| RAM                         | 4-GB minimum (8-GB recommended)                                 |
+| Platform | Requirements | Details |
+|----------|-------------|---------|
+| **Android** | Android 7.0+, ARM64/ARM32 | **Native support** - runs directly on Android via Termux or ADB |
+| **Development** | macOS 12+, Ubuntu 20.04+/Debian 10+ | For building from source (Android NDK required) |
+| **Windows** | Windows 11 via WSL2 | Limited support for development only |
+| **RAM** | 4-GB minimum (8-GB recommended) | Both development and Android runtime |
+| **Git** | 2.23+ (optional, recommended) | For built-in PR helpers |
+
+**Android Codex runs natively on Android devices** - no emulation or containers required!
 
 ---
 
 ## CLI reference
 
+### Standard Commands
 | Command            | Purpose                            | Example                         |
 | ------------------ | ---------------------------------- | ------------------------------- |
 | `codex`            | Interactive TUI                    | `codex`                         |
 | `codex "..."`      | Initial prompt for interactive TUI | `codex "fix lint errors"`       |
 | `codex exec "..."` | Non-interactive "automation mode"  | `codex exec "explain utils.ts"` |
 
-Key flags: `--model/-m`, `--ask-for-approval/-a`.
+### Android-Specific Usage
+| Environment | Command | Example |
+|-------------|---------|---------|
+| **ADB Shell** | `./codex exec --skip-git-repo-check "prompt"` | System analysis, file operations |
+| **Termux** | `codex exec "prompt"` | Direct usage after package installation |
+| **Termux Setup** | `codex-setup` | Initial configuration and API key setup |
+
+**Key flags:** `--model/-m`, `--ask-for-approval/-a`, `--sandbox`, `--skip-git-repo-check`
+
+**Android Essential:** Always use `--skip-git-repo-check` in non-git directories
 
 ---
 
@@ -566,7 +897,19 @@ Codex runs model-generated commands in a sandbox. If a proposed command or file 
 <details>
 <summary>Does it work on Windows?</summary>
 
-Not directly. It requires [Windows Subsystem for Linux (WSL2)](https://learn.microsoft.com/en-us/windows/wsl/install) - Codex has been tested on macOS and Linux with Node 22.
+For development: Requires [Windows Subsystem for Linux (WSL2)](https://learn.microsoft.com/en-us/windows/wsl/install) with Android NDK setup.
+
+For Android usage: **Yes!** Android Codex runs natively on any Android device regardless of the development platform used to build it.
+
+</details>
+
+<details>
+<summary>Does it work on Android?</summary>
+
+**Yes!** Android Codex is specifically designed to run natively on Android devices. Install via:
+- **Termux package** (recommended): `pkg install codex-android_0.0.1_aarch64.deb`
+- **Direct deployment**: Use ADB to push the binary to your device
+- **Build from source**: Cross-compile from macOS/Linux using Android NDK
 
 </details>
 

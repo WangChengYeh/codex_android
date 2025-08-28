@@ -48,40 +48,50 @@ pub struct PastedImageInfo {
 
 /// Capture image from system clipboard, encode to PNG, and return bytes + info.
 pub fn paste_image_as_png() -> Result<(Vec<u8>, PastedImageInfo), PasteImageError> {
-    tracing::debug!("attempting clipboard image read");
-    let mut cb = arboard::Clipboard::new()
-        .map_err(|e| PasteImageError::ClipboardUnavailable(e.to_string()))?;
-    let img = cb
-        .get_image()
-        .map_err(|e| PasteImageError::NoImage(e.to_string()))?;
-    let w = img.width as u32;
-    let h = img.height as u32;
-
-    let mut png: Vec<u8> = Vec::new();
-    let Some(rgba_img) = image::RgbaImage::from_raw(w, h, img.bytes.into_owned()) else {
-        return Err(PasteImageError::EncodeFailed("invalid RGBA buffer".into()));
-    };
-    let dyn_img = image::DynamicImage::ImageRgba8(rgba_img);
-    tracing::debug!("clipboard image decoded RGBA {w}x{h}");
+    #[cfg(target_os = "android")]
     {
-        let mut cursor = std::io::Cursor::new(&mut png);
-        dyn_img
-            .write_to(&mut cursor, image::ImageFormat::Png)
-            .map_err(|e| PasteImageError::EncodeFailed(e.to_string()))?;
+        return Err(PasteImageError::ClipboardUnavailable(
+            "Clipboard not supported on Android".into(),
+        ));
     }
+    
+    #[cfg(not(target_os = "android"))]
+    {
+        tracing::debug!("attempting clipboard image read");
+        let mut cb = arboard::Clipboard::new()
+            .map_err(|e| PasteImageError::ClipboardUnavailable(e.to_string()))?;
+        let img = cb
+            .get_image()
+            .map_err(|e| PasteImageError::NoImage(e.to_string()))?;
+        let w = img.width as u32;
+        let h = img.height as u32;
 
-    tracing::debug!(
-        "clipboard image encoded to PNG ({len} bytes)",
-        len = png.len()
-    );
-    Ok((
-        png,
-        PastedImageInfo {
-            width: w,
-            height: h,
-            encoded_format: EncodedImageFormat::Png,
-        },
-    ))
+        let mut png: Vec<u8> = Vec::new();
+        let Some(rgba_img) = image::RgbaImage::from_raw(w, h, img.bytes.into_owned()) else {
+            return Err(PasteImageError::EncodeFailed("invalid RGBA buffer".into()));
+        };
+        let dyn_img = image::DynamicImage::ImageRgba8(rgba_img);
+        tracing::debug!("clipboard image decoded RGBA {w}x{h}");
+        {
+            let mut cursor = std::io::Cursor::new(&mut png);
+            dyn_img
+                .write_to(&mut cursor, image::ImageFormat::Png)
+                .map_err(|e| PasteImageError::EncodeFailed(e.to_string()))?;
+        }
+
+        tracing::debug!(
+            "clipboard image encoded to PNG ({len} bytes)",
+            len = png.len()
+        );
+        Ok((
+            png,
+            PastedImageInfo {
+                width: w,
+                height: h,
+                encoded_format: EncodedImageFormat::Png,
+            },
+        ))
+    }
 }
 
 /// Convenience: write to a temp file and return its path + info.

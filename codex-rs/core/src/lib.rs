@@ -6,6 +6,8 @@
 #![deny(clippy::print_stdout, clippy::print_stderr)]
 
 mod apply_patch;
+#[cfg(target_os = "android")]
+pub mod android_pty;
 mod bash;
 mod chat_completions;
 mod client;

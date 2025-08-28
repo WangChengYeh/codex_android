@@ -12,10 +12,14 @@ clap = { version = "4", features = ["derive"] }
 codex-common = { path = "../common", features = ["cli"] }
 codex-core = { path = "../core" }
 codex-login = { path = "../login" }
-reqwest = { version = "0.12", features = ["json", "stream"] }
+reqwest = { version = "0.12", features = ["json", "stream"], default-features = false }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tokio = { version = "1", features = ["full"] }
+
+# Android target configuration - use rustls instead of OpenSSL
+[target.aarch64-linux-android.dependencies]
+reqwest = { version = "0.12", features = ["json", "stream", "rustls-tls"], default-features = false }
 
 [dev-dependencies]
 tempfile = "3"
