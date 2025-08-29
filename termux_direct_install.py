@@ -41,7 +41,7 @@ def direct_termux_install():
                 print("📋 Termux is now open on your device!")
                 print("Please run these commands in Termux:")
                 print("   1. cd /sdcard")
-                print("   2. pkg install ./codex-android_0.0.1_aarch64.deb")
+                print("   2. pkg install ./android-codex-cli-0.25.0-aarch64.deb")
                 print("   3. codex-setup")
                 print()
                 
@@ -69,10 +69,10 @@ def create_interactive_install():
     print("=====================================")
     print()
     print("1️⃣  Copy package to Termux directory:")
-    print("     cp /sdcard/codex-android_0.0.1_aarch64.deb ~/")
+    print("     cp /sdcard/android-codex-cli-0.25.0-aarch64.deb ~/")
     print()
     print("2️⃣  Install the package:")
-    print("     pkg install ~/codex-android_0.0.1_aarch64.deb")
+    print("     pkg install ~/android-codex-cli-0.25.0-aarch64.deb")
     print()
     print("3️⃣  Run initial setup:")
     print("     codex-setup")
@@ -118,8 +118,8 @@ def main():
     
     # Show current status
     print("✅ Package already pushed to device:")
-    print("   - /data/local/tmp/codex-android_0.0.1_aarch64.deb")
-    print("   - /sdcard/codex-android_0.0.1_aarch64.deb")
+    print("   - /data/local/tmp/android-codex-cli-0.25.0-aarch64.deb")
+    print("   - /sdcard/android-codex-cli-0.25.0-aarch64.deb")
     print("   - /sdcard/termux_install.sh")
     print()
     

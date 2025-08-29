@@ -50,7 +50,7 @@ pkg install python       # For advanced scripts (optional)
 pkg install codex-android
 
 # Or from our repository
-pkg install -f ./codex-android_0.0.1_aarch64.deb
+pkg install -f ./android-codex-cli-0.25.0-aarch64.deb
 ```
 
 ---
@@ -158,11 +158,11 @@ find data -type f -exec chmod 644 {} \;
 chmod +x data/data/com.termux/files/usr/bin/*
 
 # Build .deb package
-dpkg-deb --build . codex-android_0.0.1_aarch64.deb
+dpkg-deb --build . android-codex-cli-0.25.0-aarch64.deb
 
 # Verify package
-dpkg-deb --info codex-android_0.0.1_aarch64.deb
-dpkg-deb --contents codex-android_0.0.1_aarch64.deb
+dpkg-deb --info android-codex-cli-0.25.0-aarch64.deb
+dpkg-deb --contents android-codex-cli-0.25.0-aarch64.deb
 ```
 
 ---

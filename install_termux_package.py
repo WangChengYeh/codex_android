@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 MCP Pexpect Script: Install Android Codex Termux Package
-Automates the installation of codex-android_0.0.1_aarch64.deb on Android device
+Automates the installation of android-codex-cli-0.25.0-aarch64.deb on Android device
 """
 
 import pexpect
@@ -14,7 +14,7 @@ def install_termux_package():
     
     # Step 1: Push package to Android device
     print("📦 Step 1: Pushing .deb package to Android device...")
-    push_cmd = 'adb push codex-android_0.0.1_aarch64.deb /data/local/tmp/'
+    push_cmd = 'adb push android-codex-cli-0.25.0-aarch64.deb /data/local/tmp/'
     
     try:
         child = pexpect.spawn(push_cmd, timeout=60)
@@ -55,7 +55,7 @@ def install_termux_package():
         print("\n📦 Step 3: Installing Termux package...")
         
         # Copy package to accessible location
-        child.sendline('cp /data/local/tmp/codex-android_0.0.1_aarch64.deb /sdcard/')
+        child.sendline('cp /data/local/tmp/android-codex-cli-0.25.0-aarch64.deb /sdcard/')
         child.expect(['#', '$'], timeout=10)
         
         print("✅ Package copied to /sdcard/ for Termux access")
@@ -63,7 +63,7 @@ def install_termux_package():
         print("📋 Manual Installation Instructions:")
         print("   1. Open Termux on your Android device")
         print("   2. Run: cd /sdcard")
-        print("   3. Run: pkg install ./codex-android_0.0.1_aarch64.deb")
+        print("   3. Run: pkg install ./android-codex-cli-0.25.0-aarch64.deb")
         print("   4. Run: codex-setup")
         print("   5. Set your API key when prompted")
         print("   6. Test with: codex exec 'echo hello world'")
@@ -99,19 +99,19 @@ echo "=== Installing Android Codex in Termux ==="
 echo
 
 # Check if package exists
-if [ ! -f "/sdcard/codex-android_0.0.1_aarch64.deb" ]; then
-    echo "❌ Package not found at /sdcard/codex-android_0.0.1_aarch64.deb"
+if [ ! -f "/sdcard/android-codex-cli-0.25.0-aarch64.deb" ]; then
+    echo "❌ Package not found at /sdcard/android-codex-cli-0.25.0-aarch64.deb"
     echo "Please ensure the package was pushed to the device first"
     exit 1
 fi
 
 # Copy to Termux directory
 echo "📋 Copying package to Termux directory..."
-cp /sdcard/codex-android_0.0.1_aarch64.deb ~/
+cp /sdcard/android-codex-cli-0.25.0-aarch64.deb ~/
 
 # Install the package
 echo "📦 Installing Android Codex package..."
-pkg install ~/codex-android_0.0.1_aarch64.deb
+pkg install ~/android-codex-cli-0.25.0-aarch64.deb
 
 # Run setup
 echo "🔧 Running initial setup..."

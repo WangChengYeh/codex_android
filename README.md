@@ -1,13 +1,13 @@
-<h1 align="center">Android Codex CLI</h1>
+<h1 align="center">Android Codex CLI 0.25.0</h1>
 
 <p align="center"><strong>🤖 AI-powered coding assistant running natively on Android devices</strong></p>
 
 <p align="center">
-  <code>./android_setup.sh</code> → Deploy to Android device<br/>
-  <code>export HOME=/data/local/tmp && ./codex exec "Your prompt"</code> → Run on Android
+  <code>make package && make install</code> → Build & Deploy<br/>
+  <code>codex exec "Your prompt"</code> → Run in Termux
 </p>
 
-<p align="center"><strong>Android Codex</strong> brings OpenAI's powerful coding agent directly to Android devices with native ARM64 binaries, custom Android PTY implementation, and comprehensive debugging support.</p>
+<p align="center"><strong>Android Codex</strong> brings Claude 3.5 Sonnet and other AI models directly to Android devices with native ARM64 binaries, custom Android PTY implementation, and Termux integration.</p>
 
 <p align="center">
   <img src="./android_screenshot.png" alt="Android Codex running natively on Android device" width="60%" />
@@ -18,35 +18,38 @@
 
 ## 🚀 Quick Start
 
-### For Pre-built Binary (Recommended)
+### Termux Package Installation (Recommended)
 ```bash
-# 1. Clone repository
+# 1. Clone and build
 git clone https://github.com/WangChengYeh/codex_android.git
 cd codex_android
 
-# 2. Deploy to connected Android device
-./android_setup.sh
+# 2. Build and create package
+make package
 
-# 3. Use on Android device
-adb shell
-. /data/local/tmp/setup_env.sh          # Source environment
-export OPENAI_API_KEY=your_key_here     # Set your API key
-./codex exec --skip-git-repo-check "Your AI prompt here"
+# 3. Install to Android device
+make install
+
+# 4. On Android device (in Termux):
+codex-setup
+export ANTHROPIC_API_KEY=your_key_here
+codex exec "Your AI prompt here"
 ```
 
-### For Building from Source
+### Direct ADB Deployment
 ```bash
-# 1. Install prerequisites
-rustup target add aarch64-linux-android
+# 1. Build binaries
+make build
 
-# 2. Clone and build
-git clone https://github.com/WangChengYeh/codex_android.git
-cd codex_android
-source sourceme
-./build-android.sh
+# 2. Deploy via ADB
+adb push codex-rs/target/aarch64-linux-android/release/codex /data/local/tmp/
+adb shell chmod +x /data/local/tmp/codex
 
-# 3. Deploy and run (same as above)
-./android_setup.sh
+# 3. Run on Android
+adb shell
+export HOME=/data/local/tmp
+export ANTHROPIC_API_KEY=your_key_here
+./codex exec --skip-git-repo-check "Your prompt here"
 ```
 
 **📦 Installation Options:**
@@ -105,7 +108,7 @@ The easiest way to install Android Codex on your Android device is via the Termu
 ```bash
 # 1. Download the .deb package to your Android device
 # 2. Open Termux and run:
-pkg install ~/codex-android_0.0.1_aarch64.deb
+pkg install ~/android-codex-cli-0.25.0-aarch64.deb
 
 # 3. Run initial setup
 codex-setup
@@ -117,8 +120,8 @@ codex exec "Your AI prompt here"
 ### Manual Installation
 ```bash
 # If you have the package on your device already:
-cp /sdcard/codex-android_0.0.1_aarch64.deb ~/
-pkg install ~/codex-android_0.0.1_aarch64.deb
+cp /sdcard/android-codex-cli-0.25.0-aarch64.deb ~/
+pkg install ~/android-codex-cli-0.25.0-aarch64.deb
 codex-setup
 ```
 
@@ -181,7 +184,8 @@ cd codex_android
 source sourceme
 
 # Set API Keys
-export OPENAI_API_KEY=your_openai_api_key_here
+export ANTHROPIC_API_KEY=your_anthropic_api_key_here
+# export OPENAI_API_KEY=your_openai_api_key_here  # Alternative for OpenAI models
 ```
 
 ### Build Process
@@ -268,7 +272,8 @@ cd /data/local/tmp
 export HOME=/data/local/tmp
 
 # Set API key
-export OPENAI_API_KEY=your_key_here
+export ANTHROPIC_API_KEY=your_key_here  # For Claude models
+# export OPENAI_API_KEY=your_key_here   # Alternative for OpenAI models
 
 # Run Android Codex
 ./codex exec --skip-git-repo-check "Your prompt here"
@@ -289,7 +294,8 @@ export OPENAI_API_KEY=your_key_here
 ### Working in Termux
 ```bash
 # In Termux (after package installation)
-export OPENAI_API_KEY=your_key_here
+export ANTHROPIC_API_KEY=your_key_here  # For Claude models
+# export OPENAI_API_KEY=your_key_here   # Alternative for OpenAI models
 codex exec "Your AI prompt here"
 ```
 
@@ -337,7 +343,8 @@ lldb
 ```bash
 # Essential environment setup
 export HOME=/data/local/tmp  # Critical for Android compatibility
-export OPENAI_API_KEY=your_key_here
+export ANTHROPIC_API_KEY=your_key_here  # For Claude models
+# export OPENAI_API_KEY=your_key_here   # Alternative for OpenAI models
 
 # Use appropriate sandbox modes
 codex exec --sandbox workspace-write "command requiring file access"
@@ -385,10 +392,11 @@ adb shell "export OPENAI_API_KEY='your_key' && /data/local/tmp/codex --version"
 
 ### Installing and running Codex CLI
 
-Install globally with your preferred package manager:
+Install Android Codex CLI via Termux package:
 
 ```shell
-npm install -g @openai/codex  # Alternatively: `brew install codex`
+# Download and install the .deb package
+pkg install android-codex-cli-0.25.0-aarch64.deb
 ```
 
 Then simply run `codex` to get started:
@@ -780,10 +788,10 @@ You can give Codex extra instructions and guidance using `AGENTS.md` files. Code
 Run Codex head-less in pipelines. Example GitHub Action step:
 
 ```yaml
-- name: Update changelog via Codex
+- name: Update changelog via Android Codex
   run: |
-    npm install -g @openai/codex
-    export OPENAI_API_KEY="${{ secrets.OPENAI_KEY }}"
+    # Install Android Codex CLI package first
+    export ANTHROPIC_API_KEY="${{ secrets.ANTHROPIC_KEY }}"
     codex exec --full-auto "update CHANGELOG for next release"
 ```
 
@@ -907,7 +915,7 @@ For Android usage: **Yes!** Android Codex runs natively on any Android device re
 <summary>Does it work on Android?</summary>
 
 **Yes!** Android Codex is specifically designed to run natively on Android devices. Install via:
-- **Termux package** (recommended): `pkg install codex-android_0.0.1_aarch64.deb`
+- **Termux package** (recommended): `pkg install android-codex-cli-0.25.0-aarch64.deb`
 - **Direct deployment**: Use ADB to push the binary to your device
 - **Build from source**: Cross-compile from macOS/Linux using Android NDK
 

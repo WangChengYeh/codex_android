@@ -1,5 +1,5 @@
 TERMUX_PKG_HOMEPAGE=https://github.com/WangChengYeh/codex_android
-TERMUX_PKG_DESCRIPTION="Android Codex CLI 0.25.0 for Termux - AI-powered coding assistant"
+TERMUX_PKG_DESCRIPTION="Android Codex CLI 0.25.0 - AI-powered coding assistant for Android/Termux"
 TERMUX_PKG_LICENSE="MIT"
 TERMUX_PKG_MAINTAINER="@WangChengYeh"
 TERMUX_PKG_VERSION=0.25.0

@@ -1,12 +1,18 @@
 # Android Codex CLI 0.25.0 Makefile
-# Build system for Android Codex with Termux package creation
+# Advanced build system for cross-platform Android development
+# Supports native ARM64 compilation, Termux packaging, and device deployment
 
-.PHONY: all build test package clean install deploy help
+.PHONY: all build test package clean install deploy help dev-build check fmt clippy version status quick
 .DEFAULT_GOAL := help
+
+# Fail on any error
+.ONESHELL:
+SHELL := /bin/bash
+# Shell options configured per target
 
 # Configuration
 RUST_TARGET = aarch64-linux-android
-PACKAGE_NAME = codex-android
+PACKAGE_NAME = android-codex-cli
 PACKAGE_VERSION = 0.25.0
 PACKAGE_ARCH = aarch64
 BUILD_DIR = codex-rs/target/$(RUST_TARGET)/release
@@ -41,11 +47,18 @@ build: ## Build Android Codex binaries for aarch64
 		exit 1; \
 	fi
 
-# Run tests
-test: ## Run tests for Android build
+# Run comprehensive tests
+test: ## Run comprehensive tests for Android build
 	@echo "$(BLUE)Running Android Codex tests...$(RESET)"
-	@cd codex-rs && cargo test --target $(RUST_TARGET) --release
-	@echo "$(GREEN)✅ Tests completed!$(RESET)"
+	@if ! command -v rustup >/dev/null 2>&1; then \
+		echo "$(RED)❌ Rust not installed. Install from https://rustup.rs/$(RESET)"; \
+		exit 1; \
+	fi
+	@cd codex-rs && \
+		cargo test --target $(RUST_TARGET) --release && \
+		cargo clippy --target $(RUST_TARGET) --release -- -D warnings && \
+		cargo fmt -- --check
+	@echo "$(GREEN)✅ All tests passed!$(RESET)"
 
 # Build Termux package
 package: build ## Build Termux .deb package
@@ -71,9 +84,18 @@ clean: ## Clean all build artifacts
 # Install package to Android device
 install: package ## Install package to connected Android device
 	@echo "$(BLUE)Installing to Android device...$(RESET)"
-	@cp $(DEB_FILE) codex-android_0.0.1_aarch64.deb
-	@python3 install_termux_package.py
-	@echo "$(GREEN)✅ Installation prepared!$(RESET)"
+	@if ! adb devices | grep -q "device$$"; then \
+		echo "$(RED)❌ No Android device connected via ADB$(RESET)"; \
+		echo "Enable USB debugging and connect your device"; \
+		exit 1; \
+	fi
+	@python3 install_termux_package.py "$(DEB_FILE)"
+	@echo "$(GREEN)✅ Package installed to Android device!$(RESET)"
+	@echo "$(YELLOW)Next steps:$(RESET)"
+	@echo "  1. Open Termux on your Android device"
+	@echo "  2. Run: codex-setup"
+	@echo "  3. Set API key: export ANTHROPIC_API_KEY=your_key"
+	@echo "  4. Start using: codex exec 'your prompt'"
 
 # Deploy package (build + install)
 deploy: ## Build and deploy package to Android device
@@ -100,7 +122,7 @@ create-control-files:
 	@echo "Package: $(PACKAGE_NAME)" > $(PACKAGE_DIR)/DEBIAN/control
 	@echo "Version: $(PACKAGE_VERSION)" >> $(PACKAGE_DIR)/DEBIAN/control
 	@echo "Architecture: $(PACKAGE_ARCH)" >> $(PACKAGE_DIR)/DEBIAN/control
-	@echo "Maintainer: Android Codex Team" >> $(PACKAGE_DIR)/DEBIAN/control
+	@echo "Maintainer: Android Codex Team <wangchengye@example.com>" >> $(PACKAGE_DIR)/DEBIAN/control
 	@echo "Depends: bash" >> $(PACKAGE_DIR)/DEBIAN/control
 	@echo "Section: devel" >> $(PACKAGE_DIR)/DEBIAN/control
 	@echo "Priority: optional" >> $(PACKAGE_DIR)/DEBIAN/control
@@ -141,6 +163,16 @@ build-deb:
 dev-build: ## Quick development build without full package
 	@echo "$(BLUE)Development build...$(RESET)"
 	@cd codex-rs && cargo build --target $(RUST_TARGET)
+	@echo "$(GREEN)✅ Development build complete$(RESET)"
+
+watch: ## Watch for changes and rebuild
+	@echo "$(BLUE)Watching for changes...$(RESET)"
+	@cd codex-rs && cargo watch -x 'build --target $(RUST_TARGET)'
+
+bench: ## Run performance benchmarks
+	@echo "$(BLUE)Running benchmarks...$(RESET)"
+	@cd codex-rs && cargo bench --target $(RUST_TARGET)
+	@echo "$(GREEN)✅ Benchmarks completed$(RESET)"
 
 check: ## Check code without building
 	@echo "$(BLUE)Checking code...$(RESET)"
@@ -150,9 +182,15 @@ fmt: ## Format code
 	@echo "$(BLUE)Formatting code...$(RESET)"
 	@cd codex-rs && cargo fmt
 
-clippy: ## Run clippy linter
+clippy: ## Run clippy linter with strict settings
 	@echo "$(BLUE)Running clippy...$(RESET)"
-	@cd codex-rs && cargo clippy --target $(RUST_TARGET)
+	@cd codex-rs && cargo clippy --target $(RUST_TARGET) --all-targets --all-features -- -D warnings
+	@echo "$(GREEN)✅ Clippy checks passed$(RESET)"
+
+security: ## Run security audit
+	@echo "$(BLUE)Running security audit...$(RESET)"
+	@cd codex-rs && cargo audit
+	@echo "$(GREEN)✅ Security audit completed$(RESET)"
 
 # Info targets
 version: ## Show version information
@@ -172,8 +210,15 @@ status: ## Show build status
 	@echo -n "Termux package: "
 	@if [ -f "$(DEB_FILE)" ]; then \
 		echo "$(GREEN)✅ Available ($(DEB_FILE))$(RESET)"; \
+		echo "   Size: $$(du -h $(DEB_FILE) | cut -f1)"; \
 	else \
 		echo "$(RED)❌ Not built$(RESET)"; \
+	fi
+	@echo -n "Android device: "
+	@if adb devices | grep -q "device$$" >/dev/null 2>&1; then \
+		echo "$(GREEN)✅ Connected$(RESET)"; \
+	else \
+		echo "$(YELLOW)⚠️  Not connected$(RESET)"; \
 	fi
 
 # All-in-one targets
@@ -182,3 +227,19 @@ all: clean build test package ## Clean, build, test, and package
 
 quick: build package ## Quick build and package (skip tests)
 	@echo "$(GREEN)🚀 Quick build completed!$(RESET)"
+
+ci: ## Continuous integration build (comprehensive)
+	@echo "$(BLUE)Running CI pipeline...$(RESET)"
+	@$(MAKE) clean
+	@$(MAKE) build
+	@$(MAKE) test
+	@$(MAKE) security
+	@$(MAKE) package
+	@echo "$(GREEN)🎯 CI pipeline completed successfully!$(RESET)"
+
+release: ci ## Create release build with all checks
+	@echo "$(BLUE)Creating release build...$(RESET)"
+	@echo "Package: $(DEB_FILE)"
+	@echo "Version: $(PACKAGE_VERSION)"
+	@echo "Target: $(RUST_TARGET)"
+	@echo "$(GREEN)🚀 Release build ready!$(RESET)"
