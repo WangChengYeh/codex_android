@@ -135,11 +135,7 @@ create-docs:
 
 build-deb:
 	@echo "  🏗️  Building .deb package..."
-	@tar -czf control.tar.gz -C $(PACKAGE_DIR)/DEBIAN .
-	@tar -czf data.tar.gz -C $(PACKAGE_DIR) data/
-	@echo "2.0" > debian-binary
-	@ar rcs $(DEB_FILE) debian-binary control.tar.gz data.tar.gz
-	@rm -f control.tar.gz data.tar.gz debian-binary
+	@dpkg-deb --build $(PACKAGE_DIR) $(DEB_FILE)
 
 # Development targets
 dev-build: ## Quick development build without full package
